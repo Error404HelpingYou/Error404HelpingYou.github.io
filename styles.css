@@ -22,3 +22,10 @@ table.nice td {
 .scroll {
   overflow: auto;
 }
+/* Make Detail table headers look clickable */
+#detail-head th {
+  cursor: pointer;
+  user-select: none;
+}
+#detail-head th.sort-asc::after  { content: " ▲"; }
+#detail-head th.sort-desc::after { content: " ▼"; }
