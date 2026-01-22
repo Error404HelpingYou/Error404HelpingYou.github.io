@@ -1,0 +1,66 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>MJ 🏆 有賭未為輸</title>
+    <link rel="stylesheet" href="/styles.css"/>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>🏆 有賭未為輸</h1>
+      <div class="tabs">
+        <button class="on" id="tab-dashboard">Dashboard</button>
+        <button id="tab-detail" disabled title="Coming in Phase 3">Detail</button>
+        <button id="tab-admin" disabled title="Coming in Phase 2">Admin</button>
+      </div>
+
+      <div id="view-dashboard" class="card">
+        <div id="dash-note" class="note">Loading…</div>
+        <table class="nice" id="dash-table" style="display:none">
+          <thead>
+            <tr><th>Player</th><th>Total</th><th>Wins</th><th>Games</th><th>Win %</th></tr>
+          </thead>
+          <tbody id="dash-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      const fmtSign = n => n > 0 ? "+"+n : ""+n;
+      const color = n => n > 0 ? "green" : n < 0 ? "red" : "gray";
+
+      async function loadDashboard() {
+        try {
+          const r = await fetch("/api/stats");
+          const rows = await r.json();
+          const note = document.getElementById("dash-note");
+          const table = document.getElementById("dash-table");
+          const body = document.getElementById("dash-body");
+          if (!rows.length) {
+            note.textContent = "No data yet. (We’ll add Admin next to create players and entries.)";
+            table.style.display = "none";
+            return;
+          }
+          note.style.display = "none";
+          table.style.display = "";
+          body.innerHTML = "";
+          rows.forEach(r => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${r.icon} ${r.name}</td>
+              <td style="color:${color(r.total_points)};font-weight:700">${fmtSign(r.total_points)}</td>
+              <td>${r.wins}</td>
+              <td>${r.games_played}</td>
+              <td>${(r.win_pct*100).toFixed(1)}%</td>`;
+            body.appendChild(tr);
+          });
+        } catch (e) {
+          document.getElementById("dash-note").textContent = "Error loading. Deploy API in the next step.";
+        }
+      }
+      loadDashboard();
+    </script>
+  </body>
+</html>
