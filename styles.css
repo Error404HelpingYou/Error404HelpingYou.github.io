@@ -29,3 +29,11 @@ table.nice td {
 }
 #detail-head th.sort-asc::after  { content: " ▲"; }
 #detail-head th.sort-desc::after { content: " ▼"; }
+
+/* Make dashboard headers clickable + show arrow */
+#dash-table th {
+  cursor: pointer;
+  user-select: none;
+}
+#dash-table th.sort-asc::after { content: " ▲"; }
+#dash-table th.sort-desc::after { content: " ▼"; }
