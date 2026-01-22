@@ -271,3 +271,72 @@ table.nice {
   .section-header { flex-direction: column; align-items: stretch; gap: 8px; }
   .action-button { width: 100%; text-align: center; }
 }
+
+/* =========================================================
+   MOBILE MODE — shrink entire UI by ~50%
+   (Only activates below 600px width)
+   ========================================================= */
+@media (max-width: 600px) {
+  html {
+    font-size: 50%;   /* reduces all rem/em-based sizing */
+  }
+
+  /* Reduce panel padding */
+  .view-section {
+    padding: 12px;
+  }
+
+  /* Reduce tab and button sizes */
+  .tab-button,
+  .action-button {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+
+  /* Reduce input sizes */
+  .input-field {
+    padding: 6px 8px;
+    font-size: 1rem;
+  }
+
+  /* Reduce table cell padding */
+  table.nice th,
+  table.nice td {
+    padding: 6px 8px;
+    font-size: 0.9rem;
+  }
+
+  /* Slightly reduce table minimum width for cleaner view */
+  table.nice {
+    min-width: 500px;
+  }
+
+  /* Shrink cards further */
+  .view-section h2,
+  .view-section h3 {
+    font-size: 1.2rem;
+  }
+
+  /* Buttons full width for mobile ergonomics */
+  .action-button {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Reduce page header */
+  .page-header h1 {
+    font-size: 1.8rem;
+  }
+
+  /* Reduce pills size */
+  .pill {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+
+  /* Make sticky table headers shorter */
+  table.nice thead th {
+    padding: 6px 8px;
+    font-size: 0.9rem;
+  }
+}
