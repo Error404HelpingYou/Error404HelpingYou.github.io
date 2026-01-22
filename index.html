@@ -290,81 +290,157 @@
         loadDashboard();
       };
     }
-    
     // -------------------------------
-    // DETAIL TAB: Pivot table builder
+    // DETAIL TAB: Pivot table builder (sortable)
     // -------------------------------
+    // We'll keep state across re-renders here:
+    const detailState = {
+      rows: [],        // raw /api/entries rows
+      games: [],       // pivoted game rows
+      players: [],     // all player names (columns)
+      sortKey: 'Date', // current column key
+      sortDir: 'desc'  // 'asc' | 'desc'
+    };
+  
     async function loadDetail() {
       try {
-        // Fetch raw entries
         const r = await fetch("/api/entries");
         const rows = await r.json();
-    
-        const note = $("#detail-note");
-        const wrap = $("#detail-table-wrapper");
-        const thead = $("#detail-head");
-        const tbody = $("#detail-body");
-    
+        detailState.rows = rows;
+  
+        const note = document.getElementById("detail-note");
+        const wrap = document.getElementById("detail-table-wrapper");
+        const thead = document.getElementById("detail-head");
+        const tbody = document.getElementById("detail-body");
+  
         if (!rows.length) {
           note.textContent = "No entries yet.";
           wrap.style.display = "none";
           return;
         }
-    
+  
         note.style.display = "none";
         wrap.style.display = "";
-    
-        // Build pivot rows (group by entry_id)
-        const games = new Map();
+  
+        // Build pivot (group by entry_id)
+        const gamesMap = new Map();
         rows.forEach(r => {
+          // Format date as dd-MMM-yy (UTC)
           const dateFmt = new Date(r.entry_ts + "Z").toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "short",
-            year: "2-digit",
-            timeZone: "UTC"
+            day: "2-digit", month: "short", year: "2-digit", timeZone: "UTC"
           }).replace(/ /g, "-");
-    
-          if (!games.has(r.entry_id)) {
-            games.set(r.entry_id, { date: dateFmt, game: r.entry_id });
+  
+          if (!gamesMap.has(r.entry_id)) {
+            gamesMap.set(r.entry_id, { Date: dateFmt, Game: r.entry_id });
           }
-          games.get(r.entry_id)[r.name] = r.points;
+          gamesMap.get(r.entry_id)[r.name] = r.points;
         });
-    
-        // Collect all players as columns
-        const allPlayers = [...new Set(rows.map(r => r.name))].sort((a,b) =>
-          a.localeCompare(b, undefined, { sensitivity: "base" })
-        );
-    
-        // Sort games newest first
-        const gameRows = [...games.values()].sort((a,b) =>
-          a.game > b.game ? -1 : 1
-        );
-    
-        // Build header
-        thead.innerHTML = `
+  
+        // All player columns (sorted A→Z)
+        const players = Array.from(new Set(rows.map(r => r.name)))
+          .sort((a,b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  
+        // Array of game rows
+        const games = Array.from(gamesMap.values());
+  
+        // Save state
+        detailState.players = players;
+        detailState.games   = games;
+  
+        // Build header with clickable th
+        const headerHtml = `
           <tr>
-            <th>Date</th>
-            <th>Game</th>
-            ${allPlayers.map(p => `<th>${p}</th>`).join("")}
+            <th data-key="Date">Date</th>
+            <th data-key="Game">Game</th>
+            ${players.map(p => `<th data-key="${escapeHtml(p)}">${escapeHtml(p)}</th>`).join("")}
           </tr>
         `;
-    
-        // Build body
-        tbody.innerHTML = "";
-        gameRows.forEach(g => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${g.date}</td>
-            <td>${g.game}</td>
-            ${allPlayers.map(p => `<td>${g[p] ?? 0}</td>`).join("")}
-          `;
-          tbody.appendChild(tr);
+        thead.innerHTML = headerHtml;
+  
+        // Attach click handlers for sorting
+        thead.querySelectorAll("th").forEach(th => {
+          th.addEventListener("click", () => {
+            const key = th.getAttribute("data-key");
+            if (!key) return;
+  
+            // Toggle direction if same key; else default to desc for Date/Game, asc for players
+            if (detailState.sortKey === key) {
+              detailState.sortDir = (detailState.sortDir === "asc" ? "desc" : "asc");
+            } else {
+              detailState.sortKey = key;
+              detailState.sortDir = (key === "Date" || key === "Game") ? "desc" : "desc";
+            }
+  
+            renderDetailTable();
+          });
         });
-    
+  
+        // First render (default: newest first by Date or Game)
+        detailState.sortKey = "Date";
+        detailState.sortDir = "desc";
+        renderDetailTable();
+  
+        function renderDetailTable() {
+          const { games, players, sortKey, sortDir } = detailState;
+  
+          // Prepare a copy to sort
+          const data = games.slice();
+  
+          // Sorting rules:
+          // - Date: compare actual dates (newest first if desc)
+          // - Game: numeric sort
+          // - Player columns: numeric sort (points), missing -> 0
+          data.sort((a, b) => {
+            const dir = (sortDir === "asc" ? 1 : -1);
+  
+            if (sortKey === "Date") {
+              // Parse dd-MMM-yy → Date
+              const parse = (s) => new Date(s.replace(/-/g, ' ')); // quick parse; acceptable here
+              const va = parse(a.Date).getTime();
+              const vb = parse(b.Date).getTime();
+              return (va - vb) * dir;
+            }
+  
+            if (sortKey === "Game") {
+              const va = Number(a.Game) || 0;
+              const vb = Number(b.Game) || 0;
+              return (va - vb) * dir;
+            }
+  
+            // Player column (numeric points; default 0 when missing)
+            const va = Number(a[sortKey] ?? 0);
+            const vb = Number(b[sortKey] ?? 0);
+            return (va - vb) * dir;
+          });
+  
+          // Render body
+          tbody.innerHTML = data.map(g => `
+            <tr>
+              <td>${g.Date}</td>
+              <td>${g.Game}</td>
+              ${players.map(p => `<td>${Number(g[p] ?? 0)}</td>`).join("")}
+            </tr>
+          `).join("");
+  
+          // Update header indicators
+          thead.querySelectorAll("th").forEach(th => th.classList.remove("sort-asc", "sort-desc"));
+          const active = thead.querySelector(`th[data-key="${cssEscape(detailState.sortKey)}"]`);
+          if (active) active.classList.add(detailState.sortDir === "asc" ? "sort-asc" : "sort-desc");
+        }
+  
+        // Small helpers to keep HTML safe
+        function escapeHtml(s) {
+          return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+        }
+        function cssEscape(s) {
+          // basic escape for attribute selector usage
+          return String(s).replace(/["\\]/g, "\\$&");
+        }
       } catch (e) {
-        $("#detail-note").textContent = "Error loading detail.";
+        document.getElementById("detail-note").textContent = "Error loading detail.";
       }
     }
+
 
   </script>
 
