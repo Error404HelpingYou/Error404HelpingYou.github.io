@@ -10,3 +10,9 @@ h1 { margin: 8px 0 24px; }
 .note { color: #94a3b8; }
 table.nice { width: 100%; border-collapse: collapse; }
 table.nice th, table.nice td { padding: 8px 10px; border-bottom: 1px solid #1e293b; }
+table.nice th {
+  text-align: left;      /* Left-align the headers */
+}
+table.nice td {
+  text-align: left;      /* Ensures consistency */
+}
