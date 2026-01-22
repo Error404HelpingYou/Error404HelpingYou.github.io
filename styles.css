@@ -16,3 +16,9 @@ table.nice th {
 table.nice td {
   text-align: left;      /* Ensures consistency */
 }
+.wide {
+  min-width: 800px;
+}
+.scroll {
+  overflow: auto;
+}
