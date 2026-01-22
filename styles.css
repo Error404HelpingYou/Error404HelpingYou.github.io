@@ -1,342 +1,263 @@
-
 /* =========================================================
-   Apple macOS Ventura UI — Dark default + Auto Light Mode
-   - Modern buttons & tabs
-   - Sticky table headers
-   - Column hover/active highlight hooks
-   - Mobile-friendly horizontal scroll
-   - Color-coded points (text only) in Detail
+   Apple macOS Ventura UI — Clean Final Version
+   Dark Mode (default) + Automatic Light Mode
+   Modern buttons + tabs + tables
+   Mobile-only compact tables
    ========================================================= */
 
-/* ---------- Base / Theme Variables (Dark default) ---------- */
+/* ------------------------------
+   THEME VARIABLES (DARK DEFAULT)
+   ------------------------------ */
 :root {
-  --bg: #0f1220;               /* page background */
-  --text: #e6eaf2;             /* main text */
-  --muted: #a8b0bf;            /* secondary text */
-  --panel: #12172a;            /* card/panel background */
-  --panel-border: #243044;     /* card border */
-  --divider: #1f2b3f;          /* subtle dividers */
-  --accent: #0a84ff;           /* macOS blue */
-  --accent-press: #0071e3;     /* pressed/active blue */
-  --accent-ghost: rgba(10,132,255,0.12);
+  --bg: #0f1220;
+  --text: #e6eaf2;
+  --muted: #9aa4b2;
 
-  --pos: #12c45b;              /* positive text */
-  --neg: #ff5f57;              /* negative text */
-  --zero: #9aa4b2;             /* zero text */
+  --panel: #12172a;
+  --panel-border: #243044;
 
-  --table-head: rgba(18, 23, 42, 0.85);  /* sticky head bg */
-  --table-head-border: #2a3350;
+  --accent: #0a84ff;
+  --accent-press: #0071e3;
+  --accent-glow: rgba(10,132,255,0.18);
+
+  --pos: #12c45b;
+  --neg: #ff5f57;
+  --zero: #a0a8b5;
+
   --hover: rgba(255,255,255,0.04);
-  --col-hover: rgba(99,102,241,0.14); /* column hover tint */
+  --col-hover: rgba(10,132,255,0.15);
 
   --radius: 10px;
   --radius-pill: 999px;
-  --shadow-1: 0 4px 16px rgba(0,0,0,0.25);
-  --shadow-2: 0 8px 28px rgba(0,0,0,0.35);
-  --focus: 0 0 0 3px rgba(10,132,255,0.35);
-  --font: ui-sans-serif, system-ui, -apple-system, "SF Pro Text", "Segoe UI",
-          Roboto, "Noto Sans", "PingFang HK", "Microsoft JhengHei", Arial, sans-serif;
+
+  --shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+
+  --font: ui-sans-serif, system-ui, -apple-system, "SF Pro Text",
+          Roboto, "Noto Sans", Arial, sans-serif;
 }
 
-/* ---------- Light Mode Overrides (auto by OS/browser) ---------- */
+/* ------------------------------
+   LIGHT MODE OVERRIDES
+   ------------------------------ */
 @media (prefers-color-scheme: light) {
   :root {
     --bg: #f5f7fb;
     --text: #0f1220;
-    --muted: #5d6472;
+    --muted: #6a7380;
+
     --panel: #ffffff;
-    --panel-border: #e5e9f2;
-    --divider: #eef1f7;
+    --panel-border: #e1e5ef;
+
     --accent: #0a84ff;
     --accent-press: #0071e3;
-    --accent-ghost: rgba(10,132,255,0.10);
+    --accent-glow: rgba(10,132,255,0.15);
 
-    --pos: #0e8e43;
-    --neg: #d93025;
-    --zero: #6c7480;
+    --hover: rgba(0,0,0,0.04);
+    --col-hover: rgba(10,132,255,0.1);
 
-    --table-head: rgba(255,255,255,0.9);
-    --table-head-border: #e6e9f2;
-    --hover: rgba(15,18,32,0.04);
-    --col-hover: rgba(10, 132, 255, 0.12);
+    --shadow: 0 4px 12px rgba(0,0,0,0.1);
   }
 }
 
-/* ---------- Page Layout ---------- */
+/* ------------------------------
+   BASE PAGE LAYOUT
+   ------------------------------ */
 * { box-sizing: border-box; }
-html, body { height: 100%; }
 body {
   margin: 0;
-  font-family: var(--font);
+  background: var(--bg);
   color: var(--text);
-  background: radial-gradient(1200px 800px at 20% -10%, rgba(99,102,241,0.15), transparent 60%),
-              radial-gradient(1000px 700px at 120% 10%, rgba(14,165,233,0.12), transparent 50%),
-              var(--bg);
+  font-family: var(--font);
 }
 
 .page-wrap {
   max-width: 1200px;
-  margin: 24px auto 64px auto;
+  margin: 24px auto 80px auto;
   padding: 0 16px;
 }
 
 .page-header h1 {
-  margin: 8px 0 18px 0;
-  font-weight: 700;
-  letter-spacing: 0.2px;
+  margin: 0 0 20px 0;
+  font-size: 2rem;
 }
 
-/* ---------- Tabs (Apple-like) ---------- */
+/* ------------------------------
+   TABS (APPLE MACOS STYLE)
+   ------------------------------ */
 .tab-bar {
   display: flex;
   gap: 10px;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
 }
 
 .tab-button {
-  appearance: none;
-  border: 1px solid var(--panel-border);
-  color: var(--text);
-  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  padding: 10px 18px;
   border-radius: var(--radius-pill);
-  padding: 10px 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--panel-border);
   font-weight: 600;
-  letter-spacing: 0.2px;
-  transition: transform .06s ease, box-shadow .15s ease, border-color .2s ease, background .2s ease;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 1px 1px rgba(0,0,0,0.15);
   cursor: pointer;
-}
-.tab-button:hover { background: rgba(255,255,255,0.06); }
-.tab-button:active { transform: translateY(1px); }
-.tab-button.on {
-  background: var(--accent-ghost);
-  border-color: transparent;
-  color: var(--text);
-  box-shadow: 0 4px 18px rgba(10,132,255,0.2);
+  transition: 0.15s;
 }
 
-/* ---------- Section / Cards ---------- */
+.tab-button:hover {
+  background: rgba(255,255,255,0.10);
+}
+
+.tab-button.on {
+  background: var(--accent-glow);
+  border-color: transparent;
+  box-shadow: 0 4px 14px var(--accent-glow);
+}
+
+/* ------------------------------
+   SECTIONS (DASHBOARD/DETAIL/ADMIN)
+   ------------------------------ */
 .view-section {
   background: var(--panel);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius);
   padding: 16px;
-  margin-bottom: 18px;
-  box-shadow: var(--shadow-1);
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
 }
 
 .section-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
+  align-items: center;
 }
 
-.message {
-  color: var(--muted);
-  padding: 6px 8px;
-}
-
-/* ---------- Buttons (Apple macOS Ventura style) ---------- */
+/* ------------------------------
+   APPLE BUTTONS
+   ------------------------------ */
 .action-button {
-  appearance: none;
-  border: none;
-  color: #fff;
-  background: linear-gradient(180deg, var(--accent), var(--accent-press));
+  padding: 10px 18px;
   border-radius: var(--radius-pill);
-  padding: 10px 16px;
+  background: var(--accent);
+  border: none;
+  color: white;
   font-weight: 700;
-  letter-spacing: 0.2px;
-  box-shadow: 0 6px 18px rgba(10,132,255,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
-  transition: transform .06s ease, box-shadow .15s ease, filter .15s ease;
   cursor: pointer;
-}
-.action-button:hover { filter: brightness(1.06); }
-.action-button:active { transform: translateY(1px); box-shadow: 0 4px 12px rgba(10,132,255,0.3); }
-.action-button:disabled {
-  opacity: .55; cursor: not-allowed; box-shadow: none;
-  background: linear-gradient(180deg, #6b7a90, #5e6c82);
+  box-shadow: 0 6px 16px var(--accent-glow);
+  transition: 0.15s;
 }
 
-/* ---------- Inputs ---------- */
+.action-button:hover {
+  filter: brightness(1.08);
+}
+
+.action-button:active {
+  background: var(--accent-press);
+  transform: translateY(1px);
+}
+
+.action-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ------------------------------
+   INPUT FIELDS
+   ------------------------------ */
 .input-field {
-  appearance: none;
+  padding: 10px 12px;
   background: var(--panel);
   color: var(--text);
   border: 1px solid var(--panel-border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  outline: none;
-  transition: box-shadow .2s ease, border-color .2s ease;
+  border-radius: var(--radius);
 }
+
 .input-field:focus {
-  border-color: var(--accent-press);
-  box-shadow: var(--focus);
+  border-color: var(--accent);
+  outline: none;
 }
 
-.form-row {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin: 8px 0 12px 0;
-}
-
-/* ---------- Pills (selectable chips) ---------- */
+/* ------------------------------
+   PILLS
+   ------------------------------ */
 .pill-container {
   display: flex;
-  gap: 8px;
   flex-wrap: wrap;
-  margin: 8px 0 10px 0;
+  gap: 8px;
+  margin: 10px 0;
 }
-.pill-container .pill {
+
+.pill {
   padding: 8px 12px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--panel-border);
-  background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.02));
+  background: rgba(255,255,255,0.05);
   cursor: pointer;
-  transition: background .15s ease, box-shadow .15s ease, border-color .2s ease;
-}
-.pill-container .pill:hover { background: var(--hover); }
-.pill-container .pill.on {
-  border-color: transparent;
-  background: var(--accent-ghost);
-  box-shadow: 0 4px 14px rgba(10,132,255,0.20);
+  transition: 0.15s;
 }
 
-/* ---------- Tables ---------- */
+.pill:hover { background: var(--hover); }
+
+.pill.on {
+  background: var(--accent-glow);
+  border-color: transparent;
+}
+
+/* ------------------------------
+   TABLES
+   ------------------------------ */
 .table-container {
-  width: 100%;
-  overflow-x: auto;                /* Mobile-friendly horizontal scroll */
+  overflow-x: auto;
   border-radius: 8px;
   border: 1px solid var(--panel-border);
-  background: linear-gradient(180deg, rgba(255,255,255,0.018), rgba(255,255,255,0.012));
 }
 
 table.nice {
   width: 100%;
-  border-collapse: separate;       /* so sticky head shadows don’t clip */
-  border-spacing: 0;
-  min-width: 640px;                /* make narrow screens scroll */
+  border-collapse: collapse;
+  min-width: 650px;
 }
 
-.nice thead th,
-.nice tbody td {
+table.nice th,
+table.nice td {
   padding: 10px 12px;
-  border-bottom: 1px solid var(--divider);
+  border-bottom: 1px solid var(--panel-border);
   text-align: left;
   white-space: nowrap;
 }
 
-.nice thead th {
-  position: sticky; top: 0; z-index: 2;
-  background: var(--table-head);
-  border-bottom: 1px solid var(--table-head-border);
-  backdrop-filter: saturate(120%) blur(6px);
-  -webkit-backdrop-filter: saturate(120%) blur(6px);
+table.nice thead th {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  z-index: 2;
   font-weight: 700;
 }
 
-/* Sort indicators for both tables */
-#dash-table thead th,
-#detail-table thead th { cursor: pointer; user-select: none; }
-#dash-table thead th.sort-asc::after,
-#detail-table thead th.sort-asc::after { content: " ▲"; }
-#dash-table thead th.sort-desc::after,
-#detail-table thead th.sort-desc::after { content: " ▼"; }
+/* Sorting arrows */
+table.nice th.sort-asc::after  { content: " ▲"; }
+table.nice th.sort-desc::after { content: " ▼"; }
 
-/* Row hover */
-.nice tbody tr:hover td { background: var(--hover); }
+/* Column hover */
+.col-hover { background: var(--col-hover) !important; }
 
-/* Column hover / active (JS will add .col-hover / .col-active) */
-.nice td.col-hover, .nice th.col-hover { background: var(--col-hover) !important; }
-.nice td.col-active, .nice th.col-active { background: var(--col-hover) !important; }
-
-/* Detail points color (Option A: text only) */
-.points-pos { color: var(--pos); font-weight: 700; }
-.points-neg { color: var(--neg); font-weight: 700; }
+/* Detail table positive/negative colors */
+.points-pos  { color: var(--pos); font-weight: 700; }
+.points-neg  { color: var(--neg); font-weight: 700; }
 .points-zero { color: var(--zero); font-weight: 700; }
 
-/* Wide tables (Detail) */
-.wide { min-width: 900px; }
-
-/* ---------- Utility ---------- */
-.section-header h2 { margin: 6px 0; }
-.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.right { text-align: right; }
-
-/* ---------- Small-screen tweaks ---------- */
-@media (max-width: 640px) {
-  .section-header { flex-direction: column; align-items: stretch; gap: 8px; }
-  .action-button { width: 100%; text-align: center; }
-}
-
-/* =========================================================
-   MOBILE MODE — shrink entire UI by ~50%
-   (Only activates below 600px width)
-   ========================================================= */
+/* ------------------------------
+   MOBILE-ONLY TABLE SHRINK
+   ------------------------------ */
 @media (max-width: 600px) {
-  html {
-    font-size: 50%;   /* reduces all rem/em-based sizing */
-  }
-
-  /* Reduce panel padding */
-  .view-section {
-    padding: 12px;
-  }
-
-  /* Reduce tab and button sizes */
-  .tab-button,
-  .action-button {
-    padding: 6px 10px;
-    font-size: 0.9rem;
-  }
-
-  /* Reduce input sizes */
-  .input-field {
-    padding: 6px 8px;
-    font-size: 1rem;
-  }
-
-  /* Reduce table cell padding */
   table.nice th,
   table.nice td {
+    font-size: 0.75rem;
     padding: 6px 8px;
-    font-size: 0.9rem;
   }
 
-  /* Slightly reduce table minimum width for cleaner view */
   table.nice {
-    min-width: 500px;
+    min-width: 450px;
   }
 
-  /* Shrink cards further */
-  .view-section h2,
-  .view-section h3 {
-    font-size: 1.2rem;
-  }
-
-  /* Buttons full width for mobile ergonomics */
-  .action-button {
-    width: 100%;
-    text-align: center;
-  }
-
-  /* Reduce page header */
-  .page-header h1 {
-    font-size: 1.8rem;
-  }
-
-  /* Reduce pills size */
-  .pill {
-    padding: 6px 10px;
-    font-size: 0.9rem;
-  }
-
-  /* Make sticky table headers shorter */
   table.nice thead th {
     padding: 6px 8px;
-    font-size: 0.9rem;
   }
 }
