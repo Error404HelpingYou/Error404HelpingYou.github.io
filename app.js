@@ -10,7 +10,7 @@ const store = {
 };
 
 const fmtSign = n => n > 0 ? `+${n}` : `${n}`;
-const color = n => n > 0 ? "var(--pos)" : n < 0 ? "var(--neg)" : "var(--zero)`;
+const color = n => n > 0 ? "var(--pos)" : n < 0 ? "var(--neg)" : "var(--zero)";
 
 const dashState = {
   rows: [],
