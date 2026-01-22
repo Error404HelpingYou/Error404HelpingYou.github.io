@@ -1,7 +1,10 @@
 
-name = "mj3504"
+name = "mj-scoreboard"
 compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
+
+# 👇 Add this line for Cloudflare Pages:
+pages_build_output_dir = "/"
 
 [[d1_databases]]
 binding = "DB"
