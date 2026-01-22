@@ -10,4 +10,4 @@ pages_build_output_dir = "."
 [[d1_databases]]
 binding = "DB"                    # must be DB to match the code
 database_name = "mj-scoreboard-db"
-database_id = "d4f3cd7e-486c-4b69-b9a8-c3c2d677131e"
+database_id = "d9aa922a-706b-47a5-910b-cb1fbcd4af7b"
