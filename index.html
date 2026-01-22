@@ -15,8 +15,10 @@
     <!-- Tabs -->
     <div class="tabs">
       <button class="on" id="tab-dashboard">Dashboard</button>
+      <button id="tab-detail">Detail</button>
       <button id="tab-admin">Admin</button>
     </div>
+
 
     <!-- DASHBOARD -->
     <div id="view-dashboard" class="card">
@@ -33,6 +35,19 @@
         </thead>
         <tbody id="dash-body"></tbody>
       </table>
+    </div>
+
+    <!-- DETAIL VIEW -->
+    <div id="view-detail" class="card" style="display:none">
+      <h3>Detail</h3>
+      <div id="detail-note" class="note">Loading…</div>
+    
+      <div id="detail-table-wrapper" class="scroll" style="display:none">
+        <table class="nice wide">
+          <thead id="detail-head"></thead>
+          <tbody id="detail-body"></tbody>
+        </table>
+      </div>
     </div>
 
     <!-- ADMIN PANEL -->
@@ -137,6 +152,18 @@
       $("#view-admin").style.display = "";
     });
 
+
+    $("#tab-detail").addEventListener("click", () => {
+      $("#tab-dashboard").classList.remove("on");
+      $("#tab-admin").classList.remove("on");
+      $("#tab-detail").classList.add("on");
+    
+      $("#view-dashboard").style.display = "none";
+      $("#view-admin").style.display = "none";
+      $("#view-detail").style.display = "";
+    
+      loadDetail();
+    });
 
     // -------------------------------
     // ADMIN LOGIN
@@ -263,6 +290,82 @@
         loadDashboard();
       };
     }
+    
+    // -------------------------------
+    // DETAIL TAB: Pivot table builder
+    // -------------------------------
+    async function loadDetail() {
+      try {
+        // Fetch raw entries
+        const r = await fetch("/api/entries");
+        const rows = await r.json();
+    
+        const note = $("#detail-note");
+        const wrap = $("#detail-table-wrapper");
+        const thead = $("#detail-head");
+        const tbody = $("#detail-body");
+    
+        if (!rows.length) {
+          note.textContent = "No entries yet.";
+          wrap.style.display = "none";
+          return;
+        }
+    
+        note.style.display = "none";
+        wrap.style.display = "";
+    
+        // Build pivot rows (group by entry_id)
+        const games = new Map();
+        rows.forEach(r => {
+          const dateFmt = new Date(r.entry_ts + "Z").toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "2-digit",
+            timeZone: "UTC"
+          }).replace(/ /g, "-");
+    
+          if (!games.has(r.entry_id)) {
+            games.set(r.entry_id, { date: dateFmt, game: r.entry_id });
+          }
+          games.get(r.entry_id)[r.name] = r.points;
+        });
+    
+        // Collect all players as columns
+        const allPlayers = [...new Set(rows.map(r => r.name))].sort((a,b) =>
+          a.localeCompare(b, undefined, { sensitivity: "base" })
+        );
+    
+        // Sort games newest first
+        const gameRows = [...games.values()].sort((a,b) =>
+          a.game > b.game ? -1 : 1
+        );
+    
+        // Build header
+        thead.innerHTML = `
+          <tr>
+            <th>Date</th>
+            <th>Game</th>
+            ${allPlayers.map(p => `<th>${p}</th>`).join("")}
+          </tr>
+        `;
+    
+        // Build body
+        tbody.innerHTML = "";
+        gameRows.forEach(g => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${g.date}</td>
+            <td>${g.game}</td>
+            ${allPlayers.map(p => `<td>${g[p] ?? 0}</td>`).join("")}
+          `;
+          tbody.appendChild(tr);
+        });
+    
+      } catch (e) {
+        $("#detail-note").textContent = "Error loading detail.";
+      }
+    }
+
   </script>
 
 </body>
