@@ -4,3 +4,10 @@ compatibility_flags = ["nodejs_compat"]
 
 # Tell Pages to serve static files from the repo root:
 pages_build_output_dir = "."
+
+
+# Bind D1 so Pages Functions can use `env.DB`
+[[d1_databases]]
+binding = "DB"                    # must be DB to match the code
+database_name = "mj-scoreboard-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
