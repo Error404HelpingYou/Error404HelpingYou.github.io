@@ -1,190 +1,270 @@
 
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>MJ 🏆 有賭未為輸</title>
-    <link rel="stylesheet" href="/styles.css"/>
-  </head>
-  <body>
-    <div class="wrap">
-      <h1>🏆 有賭未為輸</h1>
-      <div class="tabs">
-        <button class="on" id="tab-dashboard">Dashboard</button>
-        <button id="tab-detail" disabled title="Coming in Phase 3">Detail</button>
-        <button id="tab-admin" disabled title="Coming in Phase 2">Admin</button>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>MJ 🏆 有賭未為輸</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="wrap">
+    <h1>🏆 有賭未為輸</h1>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="on" id="tab-dashboard">Dashboard</button>
+      <button id="tab-admin">Admin</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="view-dashboard" class="card">
+      <div id="dash-note" class="note">Loading…</div>
+      <table class="nice" id="dash-table" style="display:none">
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Total</th>
+            <th>Wins</th>
+            <th>Games</th>
+            <th>Win %</th>
+          </tr>
+        </thead>
+        <tbody id="dash-body"></tbody>
+      </table>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div id="view-admin" class="card" style="display:none">
+      <h3>Admin</h3>
+
+      <!-- Login form -->
+      <div id="admin-login">
+        <input type="password" id="admin-pass" placeholder="Enter admin password"/>
+        <button id="btn-login">Login</button>
+        <div class="note">Password is set in Cloudflare Pages → Settings → Environment Variables.</div>
       </div>
 
-      <div id="view-dashboard" class="card">
-        <div id="dash-note" class="note">Loading…</div>
-        <table class="nice" id="dash-table" style="display:none">
-          <thead>
-            <tr><th>Player</th><th>Total</th><th>Wins</th><th>Games</th><th>Win %</th></tr>
-          </thead>
-          <tbody id="dash-body"></tbody>
-        </table>
+      <!-- Actual admin controls (hidden until login) -->
+      <div id="admin-panel" style="display:none">
+        
+        <h4>Add player</h4>
+        <input id="p-name" placeholder="Name"/>
+        <input id="p-icon" placeholder="Icon (🎯 🏆 ⚽)"/>
+        <button id="btn-add-player">Save Player</button>
+
+        <h4 style="margin-top:16px">New Game Entry</h4>
+        <input type="date" id="game-date" />
+        <input id="note" placeholder="Optional note"/>
+
+        <div id="players-list" class="row"></div>
+        <div id="per-player"></div>
+
+        <button id="btn-save-entry" disabled>Save Entry</button>
       </div>
     </div>
-      
-      <div id="view-admin" class="card">
-        <h3>Admin</h3>
-      
-        <div id="admin-login">
-          <input type="password" id="admin-pass" placeholder="Enter admin password"/>
-          <button id="btn-login">Login</button>
-          <div class="note">Password is set in Cloudflare Pages → Settings → Environment Variables → ADMIN_PASSWORD.</div>
-        </div>
-      
-        <div id="admin-panel" style="display:none">
-          <h4>Add player</h4>
-          <input id="p-name" placeholder="Name"/>
-          <input id="p-icon" placeholder="Icon (🎯 🏆 ⚽)"/>
-          <button id="btn-add-player">Save Player</button>
-      
-          <h4 style="margin-top:16px">New Game Entry</h4>
-          <input type="date" id="game-date" />
-          <input id="note" placeholder="Optional note"/>
-          <div id="players-list" class="row"></div>
-          <div id="per-player"></div>
-          <button id="btn-save-entry" disabled>Save Entry</button>
-        </div>
-      </div>
+  </div>
 
-    <script>
-      const fmtSign = n => n > 0 ? "+"+n : ""+n;
-      const color = n => n > 0 ? "green" : n < 0 ? "red" : "gray";
+  <!-- ALL JAVASCRIPT HERE -->
+  <script>
+    // -------------------------------
+    // DASHBOARD HELPERS
+    // -------------------------------
+    const fmtSign = n => n > 0 ? "+" + n : "" + n;
+    const color = n => n > 0 ? "green" : n < 0 ? "red" : "gray";
 
-      async function loadDashboard() {
-        try {
-          const r = await fetch("/api/stats");
-          const rows = await r.json();
-          const note = document.getElementById("dash-note");
-          const table = document.getElementById("dash-table");
-          const body = document.getElementById("dash-body");
-          if (!rows.length) {
-            note.textContent = "No data yet. (We’ll add Admin next to create players and entries.)";
-            table.style.display = "none";
-            return;
-          }
-          note.style.display = "none";
-          table.style.display = "";
-          body.innerHTML = "";
-          rows.forEach(r => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td>${r.icon} ${r.name}</td>
-              <td style="color:${color(r.total_points)};font-weight:700">${fmtSign(r.total_points)}</td>
-              <td>${r.wins}</td>
-              <td>${r.games_played}</td>
-              <td>${(r.win_pct*100).toFixed(1)}%</td>`;
-            body.appendChild(tr);
-          });
-        } catch (e) {
-          document.getElementById("dash-note").textContent = "Error loading. Deploy API in the next step.";
+    // Load scoreboard
+    async function loadDashboard() {
+      try {
+        const r = await fetch("/api/stats");
+        const rows = await r.json();
+
+        const note = document.getElementById("dash-note");
+        const table = document.getElementById("dash-table");
+        const body = document.getElementById("dash-body");
+
+        if (!rows.length) {
+          note.textContent = "No data yet.";
+          table.style.display = "none";
+          return;
         }
+
+        note.style.display = "none";
+        table.style.display = "";
+        body.innerHTML = "";
+
+        rows.forEach(r => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${r.icon} ${r.name}</td>
+            <td style="color:${color(r.total_points)};font-weight:700">${fmtSign(r.total_points)}</td>
+            <td>${r.wins}</td>
+            <td>${r.games_played}</td>
+            <td>${(r.win_pct*100).toFixed(1)}%</td>
+          `;
+          body.appendChild(tr);
+        });
+      } catch (e) {
+        document.getElementById("dash-note").textContent = "Error loading dashboard.";
       }
-      loadDashboard();
-      
-      <script>
-        const $ = s => document.querySelector(s);
-        const $$ = s => Array.from(document.querySelectorAll(s));
-      
-        // Tab click (enable Admin UI but we won’t add Detail yet)
-        $("#tab-admin").disabled = false;
-        $("#tab-admin").addEventListener("click", () => {
-          $("#tab-dashboard").classList.remove("on");
-          $("#tab-admin").classList.add("on");
-          $("#view-dashboard").style.display = "none";
-          $("#view-admin").style.display = "";
+    }
+
+    // Run dashboard
+    loadDashboard();
+
+
+    // Shortcuts
+    const $ = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+
+
+    // -------------------------------
+    // TAB BEHAVIOR
+    // -------------------------------
+    $("#tab-dashboard").addEventListener("click", () => {
+      $("#tab-dashboard").classList.add("on");
+      $("#tab-admin").classList.remove("on");
+
+      $("#view-dashboard").style.display = "";
+      $("#view-admin").style.display = "none";
+    });
+
+    $("#tab-admin").addEventListener("click", () => {
+      $("#tab-admin").classList.add("on");
+      $("#tab-dashboard").classList.remove("on");
+
+      $("#view-dashboard").style.display = "none";
+      $("#view-admin").style.display = "";
+    });
+
+
+    // -------------------------------
+    // ADMIN LOGIN
+    // -------------------------------
+    $("#btn-login").addEventListener("click", async () => {
+      const password = $("#admin-pass").value;
+
+      const r = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {"content-type": "application/json"},
+        body: JSON.stringify({ password })
+      });
+
+      const data = await r.json();
+
+      if (data.ok) {
+        $("#admin-login").style.display = "none";
+        $("#admin-panel").style.display = "";
+        await loadPlayersForAdmin();
+      } else {
+        alert("Incorrect password");
+      }
+    });
+
+
+    // -------------------------------
+    // LOADING PLAYERS IN ADMIN PANEL
+    // -------------------------------
+    async function loadPlayersForAdmin() {
+      const r = await fetch("/api/players");
+      const players = await r.json();
+
+      const list = $("#players-list");
+      list.innerHTML = "";
+
+      players.forEach(p => {
+        const label = document.createElement("label");
+        label.textContent = `${p.icon} ${p.name}`;
+        label.className = "pill";
+        label.dataset.id = p.id;
+
+        label.addEventListener("click", () => {
+          label.classList.toggle("on");
+          renderPlayerInputs(players);
         });
-        $("#tab-dashboard").addEventListener("click", () => location.reload());
-      
-        // Admin login
-        $("#btn-login").addEventListener("click", async () => {
-          const password = $("#admin-pass").value;
-          const r = await fetch("/api/auth/login", {
-            method: "POST", headers: { "content-type": "application/json" },
-            body: JSON.stringify({ password })
-          });
-          const data = await r.json();
-          if (data.ok) {
-            $("#admin-login").style.display = "none";
-            $("#admin-panel").style.display = "";
-            await loadPlayersForAdmin();
-          } else {
-            alert("Wrong password");
-          }
+
+        list.appendChild(label);
+      });
+
+      // Add player
+      $("#btn-add-player").onclick = async () => {
+        const name = $("#p-name").value.trim();
+        const icon = $("#p-icon").value.trim() || null;
+
+        if (!name) return alert("Name required");
+
+        await fetch("/api/players", {
+          method: "POST",
+          headers: {"content-type": "application/json"},
+          body: JSON.stringify({ name, icon })
         });
-      
-        async function loadPlayersForAdmin() {
-          const r = await fetch("/api/players");
-          const players = await r.json();
-      
-          // Chips to select players
-          const list = $("#players-list");
-          list.innerHTML = "";
-          players.forEach(p => {
-            const label = document.createElement("label");
-            label.textContent = `${p.icon} ${p.name}`;
-            label.className = "pill";
-            label.dataset.id = p.id;
-            label.addEventListener("click", () => {
-              label.classList.toggle("on");
-              renderPerPlayerInputs();
-            });
-            list.appendChild(label);
-          });
-      
-          // Add player button
-          $("#btn-add-player").onclick = async () => {
-            const name = $("#p-name").value.trim();
-            const icon = $("#p-icon").value.trim() || null;
-            if (!name) return alert("Enter a name");
-            await fetch("/api/players", { method: "POST", headers: { "content-type":"application/json" }, body: JSON.stringify({ name, icon }) });
-            $("#p-name").value = ""; $("#p-icon").value = "";
-            await loadPlayersForAdmin();
-            await loadDashboard(); // refresh stats too
-          };
-      
-          function selectedIds() {
-            return $$("#players-list .pill.on").map(el => Number(el.dataset.id));
-          }
-      
-          function renderPerPlayerInputs() {
-            const box = $("#per-player");
-            box.innerHTML = "";
-            const ids = selectedIds();
-            $("#btn-save-entry").disabled = ids.length === 0;
-      
-            const half = Math.max(1, Math.floor(ids.length/2));
-            ids.forEach((id, idx) => {
-              const row = document.createElement("div");
-              row.className = "row";
-              const p = players.find(x => x.id === id);
-              row.innerHTML = `<label style="min-width:120px">${p.name}</label>
-                <input type="number" data-id="${id}" value="${idx < half ? 5 : -5}">`;
-              box.appendChild(row);
-            });
-          }
-      
-          $("#btn-save-entry").onclick = async () => {
-            const ids = selectedIds();
-            if (!ids.length) return;
-            const inputs = $$("#per-player input[type=number]");
-            const items = inputs.map(inp => ({ player_id: Number(inp.dataset.id), points: parseInt(inp.value||"0",10) }));
-            const note = $("#note").value;
-            const game_date = $("#game-date").value || undefined;
-            await fetch("/api/entries", { method: "POST", headers: { "content-type":"application/json" }, body: JSON.stringify({ items, note, game_date }) });
-            alert("Saved!");
-            $("#note").value = "";
-            $$("#players-list .pill.on").forEach(el => el.classList.remove("on"));
-            $("#per-player").innerHTML = "";
-            $("#btn-save-entry").disabled = true;
-            await loadDashboard();
-          };
-        }
-      </script>
-    </script>
-  </body>
+
+        $("#p-name").value = "";
+        $("#p-icon").value = "";
+
+        await loadPlayersForAdmin();
+        await loadDashboard();
+      };
+
+
+      // Render inputs for selected players
+      function renderPlayerInputs(players) {
+        const selected = $$("#players-list .pill.on").map(x => Number(x.dataset.id));
+
+        const box = $("#per-player");
+        box.innerHTML = "";
+
+        $("#btn-save-entry").disabled = !selected.length;
+
+        const half = Math.max(1, Math.floor(selected.length / 2));
+
+        selected.forEach((id, idx) => {
+          const p = players.find(x => x.id === id);
+
+          const row = document.createElement("div");
+          row.className = "row";
+
+          row.innerHTML = `
+            <label style="min-width:120px">${p.name}</label>
+            <input type="number" data-id="${id}" value="${idx < half ? 5 : -5}">
+          `;
+
+          box.appendChild(row);
+        });
+      }
+
+
+      // Save entry
+      $("#btn-save-entry").onclick = async () => {
+        const inputs = $$("#per-player input");
+
+        const items = inputs.map(inp => ({
+          player_id: Number(inp.dataset.id),
+          points: Number(inp.value || 0)
+        }));
+
+        const note = $("#note").value;
+        const game_date = $("#game-date").value || undefined;
+
+        await fetch("/api/entries", {
+          method: "POST",
+          headers: {"content-type":"application/json"},
+          body: JSON.stringify({ items, note, game_date })
+        });
+
+        alert("Saved!");
+
+        $("#note").value = "";
+        $("#per-player").innerHTML = "";
+        $("#btn-save-entry").disabled = true;
+
+        $$("#players-list .pill.on").forEach(el => el.classList.remove("on"));
+
+        loadDashboard();
+      };
+    }
+  </script>
+
+</body>
 </html>
