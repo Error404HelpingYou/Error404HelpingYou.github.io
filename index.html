@@ -26,6 +26,30 @@
         </table>
       </div>
     </div>
+      
+      <div id="view-admin" class="card">
+        <h3>Admin</h3>
+      
+        <div id="admin-login">
+          <input type="password" id="admin-pass" placeholder="Enter admin password"/>
+          <button id="btn-login">Login</button>
+          <div class="note">Password is set in Cloudflare Pages → Settings → Environment Variables → ADMIN_PASSWORD.</div>
+        </div>
+      
+        <div id="admin-panel" style="display:none">
+          <h4>Add player</h4>
+          <input id="p-name" placeholder="Name"/>
+          <input id="p-icon" placeholder="Icon (🎯 🏆 ⚽)"/>
+          <button id="btn-add-player">Save Player</button>
+      
+          <h4 style="margin-top:16px">New Game Entry</h4>
+          <input type="date" id="game-date" />
+          <input id="note" placeholder="Optional note"/>
+          <div id="players-list" class="row"></div>
+          <div id="per-player"></div>
+          <button id="btn-save-entry" disabled>Save Entry</button>
+        </div>
+      </div>
 
     <script>
       const fmtSign = n => n > 0 ? "+"+n : ""+n;
@@ -61,6 +85,106 @@
         }
       }
       loadDashboard();
+      
+<script>
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+
+  // Tab click (enable Admin UI but we won’t add Detail yet)
+  $("#tab-admin").disabled = false;
+  $("#tab-admin").addEventListener("click", () => {
+    $("#tab-dashboard").classList.remove("on");
+    $("#tab-admin").classList.add("on");
+    $("#view-dashboard").style.display = "none";
+    $("#view-admin").style.display = "";
+  });
+  $("#tab-dashboard").addEventListener("click", () => location.reload());
+
+  // Admin login
+  $("#btn-login").addEventListener("click", async () => {
+    const password = $("#admin-pass").value;
+    const r = await fetch("/api/auth/login", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ password })
+    });
+    const data = await r.json();
+    if (data.ok) {
+      $("#admin-login").style.display = "none";
+      $("#admin-panel").style.display = "";
+      await loadPlayersForAdmin();
+    } else {
+      alert("Wrong password");
+    }
+  });
+
+  async function loadPlayersForAdmin() {
+    const r = await fetch("/api/players");
+    const players = await r.json();
+
+    // Chips to select players
+    const list = $("#players-list");
+    list.innerHTML = "";
+    players.forEach(p => {
+      const label = document.createElement("label");
+      label.textContent = `${p.icon} ${p.name}`;
+      label.className = "pill";
+      label.dataset.id = p.id;
+      label.addEventListener("click", () => {
+        label.classList.toggle("on");
+        renderPerPlayerInputs();
+      });
+      list.appendChild(label);
+    });
+
+    // Add player button
+    $("#btn-add-player").onclick = async () => {
+      const name = $("#p-name").value.trim();
+      const icon = $("#p-icon").value.trim() || null;
+      if (!name) return alert("Enter a name");
+      await fetch("/api/players", { method: "POST", headers: { "content-type":"application/json" }, body: JSON.stringify({ name, icon }) });
+      $("#p-name").value = ""; $("#p-icon").value = "";
+      await loadPlayersForAdmin();
+      await loadDashboard(); // refresh stats too
+    };
+
+    function selectedIds() {
+      return $$("#players-list .pill.on").map(el => Number(el.dataset.id));
+    }
+
+    function renderPerPlayerInputs() {
+      const box = $("#per-player");
+      box.innerHTML = "";
+      const ids = selectedIds();
+      $("#btn-save-entry").disabled = ids.length === 0;
+
+      const half = Math.max(1, Math.floor(ids.length/2));
+      ids.forEach((id, idx) => {
+        const row = document.createElement("div");
+        row.className = "row";
+        const p = players.find(x => x.id === id);
+        row.innerHTML = `<label style="min-width:120px">${p.name}</label>
+          <input type="number" data-id="${id}" value="${idx < half ? 5 : -5}">`;
+        box.appendChild(row);
+      });
+    }
+
+    $("#btn-save-entry").onclick = async () => {
+      const ids = selectedIds();
+      if (!ids.length) return;
+      const inputs = $$("#per-player input[type=number]");
+      const items = inputs.map(inp => ({ player_id: Number(inp.dataset.id), points: parseInt(inp.value||"0",10) }));
+      const note = $("#note").value;
+      const game_date = $("#game-date").value || undefined;
+      await fetch("/api/entries", { method: "POST", headers: { "content-type":"application/json" }, body: JSON.stringify({ items, note, game_date }) });
+      alert("Saved!");
+      $("#note").value = "";
+      $$("#players-list .pill.on").forEach(el => el.classList.remove("on"));
+      $("#per-player").innerHTML = "";
+      $("#btn-save-entry").disabled = true;
+      await loadDashboard();
+    };
+  }
+</script>
     </script>
   </body>
 </html>
