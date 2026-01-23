@@ -244,6 +244,7 @@ function buildMatchupHeader() {
     });
   });
 }
+
 function renderMatchups() {
   const note = $("#match-note");
   const table = $("#matchups-table");
@@ -262,20 +263,37 @@ function renderMatchups() {
   const dir = matchupState.sortDir === "asc" ? 1 : -1;
 
   rows.sort((a, b) => {
-    if (matchupState.sortKey === "Player") return a.name.localeCompare(b.name, undefined, {sensitivity:"base"}) * dir;
-    if (matchupState.sortKey === "BestRate") return ((a.bestRate ?? -1) - (b.bestRate ?? -1)) * dir;
-    if (matchupState.sortKey === "WorstRate") return ((a.worstRate ?? 2) - (b.worstRate ?? 2)) * dir;
+    if (matchupState.sortKey === "Player")
+      return a.name.localeCompare(b.name, undefined, { sensitivity: "base" }) * dir;
+    if (matchupState.sortKey === "BestRate")
+      return ((a.bestRate ?? -1) - (b.bestRate ?? -1)) * dir;
+    if (matchupState.sortKey === "WorstRate")
+      return ((a.worstRate ?? 2) - (b.worstRate ?? 2)) * dir;
     return 0;
   });
 
+  // Render a vertical list (one line per opponent) with wrapping
   function listWithPctAndN(items) {
     if (!items?.length) return "—";
-    return items.map(it => {
+    const rowsHTML = items.map(it => {
       const pct = (it.rate * 100).toFixed(1) + "%";
       const games = it.n;
       const clr = rateColor(it.rate);
-      return `<span style="color:${clr}; font-weight:600;">${it.name} (${pct}, ${games} ${games === 1 ? "game" : "games"})</span>`;
-    }).join(", ");
+      return `
+        <div class="opp-item"
+             style="color:${clr}; font-weight:600; white-space:normal; word-break:break-word;">
+          ${it.name} (${pct}, ${games} ${games === 1 ? "game" : "games"})
+        </div>
+      `;
+    }).join("");
+
+    // Flex column ensures each opponent is on its own line; inline styles guarantee wrapping
+    return `
+      <div class="opp-list"
+           style="display:flex; flex-direction:column; gap:4px; white-space:normal; word-break:break-word;">
+        ${rowsHTML}
+      </div>
+    `;
   }
 
   body.innerHTML = rows.map(r => `
