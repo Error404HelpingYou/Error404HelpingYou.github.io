@@ -162,6 +162,22 @@ function renderDetail() {
       }).join("")}
     </tr>
   `).join("");
+  const totals = detailState.players.map(p =>
+    data.reduce((sum, g) => sum + Number(g[p] ?? 0), 0)
+  );
+  const totalRow = `
+    <tr style="font-weight:700; background:var(--hover);">
+      <td>TOTAL</td>
+      <td>—</td>
+      ${totals.map(v => {
+        const cls = v > 0 ? "points-pos" : v < 0 ? "points-neg" : "points-zero";
+        const sign = v > 0 ? `+${v}` : `${v}`;
+        return `<td><span class="${cls}">${sign}</span></td>`;
+      }).join("")}
+    </tr>
+  `;
+  
+  body.innerHTML += totalRow;
   clearSortIndicators(head); applySortIndicator(head, detailState.sortKey, detailState.sortDir);
 }
 
