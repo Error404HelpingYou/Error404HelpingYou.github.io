@@ -23,6 +23,7 @@
       <button class="tab-button" id="tab-dashboard">Dashboard</button>
       <button class="tab-button" id="tab-detail">Detail</button>
       <button class="tab-button" id="tab-admin">Admin</button>
+      <button class="tab-button" id="tab-matchups">Counter</button>
     </nav>
 
     <!-- DASHBOARD -->
@@ -53,8 +54,9 @@
 
       <div class="table-container scroll">
         <table class="nice wide" id="detail-table">
-          <thead id="detail-head"></thead>
-          <tbody id="detail-body"></tbody>
+          #match-note
+          <thead id="match-head"></thead>
+          <tbody id="match-body"></tbody>
         </table>
       </div>
     </section>
@@ -102,7 +104,18 @@
         <div id="recent-entries"></div>
       </div>
     </section>
-
+        <!-- DASHBOARD -->
+    <section id="view-matchups" class="view-section">
+      <div class="section-header">
+        <h2>Counter</h2>
+      <div id="dash-note" class="message">Loading…</div>
+      <div class="table-container">
+        <table class="nice" id="dash-table">
+          <thead id="dash-head"></thead>
+          <tbody id="dash-body"></tbody>
+        </table>
+      </div>
+    </section>
   </div>
 
   <!-- Main Script -->
