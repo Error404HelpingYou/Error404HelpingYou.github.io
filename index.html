@@ -105,17 +105,20 @@
       </div>
     </section>
         <!-- DASHBOARD -->
-    <section id="view-matchups" class="view-section">
-      <div class="section-header">
-        <h2>Counter</h2>
-      <div id="dash-note" class="message">Loading…</div>
-      <div class="table-container">
-        <table class="nice" id="dash-table">
-          <thead id="dash-head"></thead>
-          <tbody id="dash-body"></tbody>
+
+    <!-- Matchups view -->
+    <div id="view-matchups" style="display:none">
+      <!-- Status/message area for this view -->
+      <div id="match-note" class="message">Loading…</div>
+    
+      <div class="table-wrap">
+        <table id="matchups-table" class="data-table" style="display:none">
+          <thead id="match-head"></thead>
+          <tbody id="match-body"></tbody>
         </table>
       </div>
-    </section>
+    </div>
+
   </div>
 
   <!-- Main Script -->
