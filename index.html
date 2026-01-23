@@ -21,8 +21,8 @@
   <!-- Tabs -->
   <nav class="tab-bar">
     <button class="tab-button" id="tab-dashboard">Dashboard</button>
-    <button class="tab-button" id="tab-detail">Detail</button>
     <button class="tab-button" id="tab-matchups">Matchups</button>
+    <button class="tab-button" id="tab-detail">Detail</button>
     <button class="tab-button" id="tab-admin">Admin</button>
   </nav>
 
@@ -43,6 +43,22 @@
     </div>
   </section>
 
+  <!-- MATCHUPS (NEW TAB) -->
+  <section id="view-matchups" class="view-section" style="display:none">
+    <div class="section-header">
+      <h2>Matchups</h2>
+    </div>
+
+    <div id="match-note" class="message">Loading…</div>
+
+    <div class="table-container">
+      <table class="nice" id="matchups-table" style="display:none">
+        <thead id="match-head"></thead>
+        <tbody id="match-body"></tbody>
+      </table>
+    </div>
+  </section>
+
   <!-- DETAIL -->
   <section id="view-detail" class="view-section" style="display:none">
     <div class="section-header">
@@ -56,22 +72,6 @@
       <table class="nice wide" id="detail-table">
         <thead id="detail-head"></thead>
         <tbody id="detail-body"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- MATCHUPS (NEW) -->
-  <section id="view-matchups" class="view-section" style="display:none">
-    <div class="section-header">
-      <h2>Matchups</h2>
-    </div>
-
-    <div id="match-note" class="message">Loading…</div>
-
-    <div class="table-container">
-      <table class="nice" id="matchups-table" style="display:none">
-        <thead id="match-head"></thead>
-        <tbody id="match-body"></tbody>
       </table>
     </div>
   </section>
