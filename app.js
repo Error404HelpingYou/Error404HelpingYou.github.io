@@ -364,7 +364,7 @@ async function loadMatchups() {
     buildMatchupHeader();
     renderMatchups();
   } catch {
-    $("#match-note")?.textContent = "Error loading matchups.";
+    $("#match-note") && ($("#match-note").textContent = "Error loading matchups.")
     $("#matchups-table") && ($("#matchups-table").style.display = "none");
   }
 }
