@@ -40,10 +40,10 @@ function selectTab(tab) {
   $("#tab-admin")?.classList.remove("on");
   $("#tab-matchups")?.classList.remove("on");
 
-  $("#view-dashboard")?.style && ($("#view-dashboard").style.display = "none");
-  $("#view-detail")?.style && ($("#view-detail").style.display = "none");
-  $("#view-admin")?.style && ($("#view-admin").style.display = "none");
-  $("#view-matchups")?.style && ($("#view-matchups").style.display = "none");
+  $("#view-dashboard") && ($("#view-dashboard").style.display = "none");
+  $("#view-detail") && ($("#view-detail").style.display = "none");
+  $("#view-admin") && ($("#view-admin").style.display = "none");
+  $("#view-matchups") && ($("#view-matchups").style.display = "none");
 
   if (tab === "dashboard") {
     $("#tab-dashboard")?.classList.add("on");
@@ -323,7 +323,7 @@ async function loadMatchups() {
       const names = Array.from(ptsMap.keys());
       for (const A of names) {
         const aPts = ptsMap.get(A) ?? 0;
-        if (aPts === 0) continue; // tie for A - exclude from A's denominator for all vs-B in this game
+        if (aPts === 0) continue; // tie for A - exclude from A's denominator
         for (const B of names) {
           if (A === B) continue;
           const ab = stats.get(A)?.get(B);
@@ -491,8 +491,8 @@ async function adminLoadRecent() {
 // ===== WIRING =====
 function wireTabs() {
   $("#tab-dashboard")?.addEventListener("click", () => { selectTab("dashboard"); });
-  $("#tab-detail")?.addEventListener("click", () => { selectTab("detail"); loadDetail(); });
   $("#tab-matchups")?.addEventListener("click", () => { selectTab("matchups"); loadMatchups(); });
+  $("#tab-detail")?.addEventListener("click", () => { selectTab("detail"); loadDetail(); });
   $("#tab-admin")?.addEventListener("click", () => { selectTab("admin"); });
 }
 function wireExports() {
