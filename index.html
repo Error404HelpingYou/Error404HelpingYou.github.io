@@ -11,119 +11,117 @@
 </head>
 
 <body>
-<div class="page-wrap">
+  <div class="page-wrap">
 
-  <!-- Title -->
-  <header class="page-header">
-    <h1>🏆 有賭未為輸</h1>
-  </header>
+    <!-- Title -->
+    <header class="page-header">
+      <h1>🏆 有賭未為輸</h1>
+    </header>
 
-  <!-- Tabs -->
-  <nav class="tab-bar">
-    <button class="tab-button" id="tab-dashboard">Dashboard</button>
-    <button class="tab-button" id="tab-matchups">Matchups</button>
-    <button class="tab-button" id="tab-detail">Detail</button>
-    <button class="tab-button" id="tab-admin">Admin</button>
-  </nav>
+    <!-- Tabs -->
+    <nav class="tab-bar">
+      <button class="tab-button" id="tab-dashboard">Dashboard</button>
+      <button class="tab-button" id="tab-matchups">Matchups</button>
+      <button class="tab-button" id="tab-detail">Detail</button>
+      <button class="tab-button" id="tab-admin">Admin</button>
+    </nav>
 
-  <!-- DASHBOARD -->
-  <section id="view-dashboard" class="view-section">
-    <div class="section-header">
-      <h2>Dashboard</h2>
-      <button id="export-dashboard" class="action-button">Export CSV</button>
-    </div>
-
-    <div id="dash-note" class="message">Loading…</div>
-
-    <div class="table-container">
-      <table class="nice" id="dash-table">
-        <thead id="dash-head"></thead>
-        <tbody id="dash-body"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- MATCHUPS (NEW TAB) -->
-  <section id="view-matchups" class="view-section" style="display:none">
-    <div class="section-header">
-      <h2>Matchups</h2>
-    </div>
-
-    <div id="match-note" class="message">Loading…</div>
-
-    <div class="table-container">
-      <table class="nice" id="matchups-table" style="display:none">
-        <thead id="match-head"></thead>
-        <tbody id="match-body"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- DETAIL -->
-  <section id="view-detail" class="view-section" style="display:none">
-    <div class="section-header">
-      <h2>Detail</h2>
-      <button id="export-detail" class="action-button">Export CSV</button>
-    </div>
-
-    <div id="detail-note" class="message">Loading…</div>
-
-    <div class="table-container scroll">
-      <table class="nice wide" id="detail-table">
-        <thead id="detail-head"></thead>
-        <tbody id="detail-body"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- ADMIN -->
-  <section id="view-admin" class="view-section" style="display:none">
-    <div class="section-header">
-      <h2>Admin Panel</h2>
-    </div>
-
-    <!-- Login -->
-    <div id="admin-login">
-      <input type="password" id="admin-pass" class="input-field" placeholder="Enter admin password" />
-      <button id="btn-login" class="action-button">Login</button>
-    </div>
-
-    <!-- After login -->
-    <div id="admin-panel" style="display:none">
-
-      <h3>Add Player</h3>
-      <div class="form-row">
-        <input id="p-name" class="input-field" placeholder="Name" />
-        <input id="p-icon" class="input-field" placeholder="Icon (🎯 🏆 ⚽)" />
-        <button id="btn-add-player" class="action-button">Save</button>
+    <!-- DASHBOARD -->
+    <section id="view-dashboard" class="view-section">
+      <div class="section-header">
+        <h2>Dashboard</h2>
+        <button id="export-dashboard" class="action-button">Export CSV</button>
       </div>
 
-      <h3>Delete Player</h3>
-      <div class="form-row">
-        <select id="delete-player-select" class="input-field"></select>
-        <button id="btn-delete-player" class="action-button">Delete</button>
+      <div id="dash-note" class="message">Loading…</div>
+
+      <div class="table-container">
+        <table class="nice" id="dash-table">
+          <thead id="dash-head"></thead>
+          <tbody id="dash-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MATCHUPS (NEW) -->
+    <section id="view-matchups" class="view-section" style="display:none">
+      <div class="section-header">
+        <h2>Matchups</h2>
       </div>
 
-      <h3>New Game Entry</h3>
-      <div class="form-row">
-        <input type="date" id="game-date" class="input-field" />
-        <input id="note" class="input-field" placeholder="Optional note" />
+      <div id="match-note" class="message">Loading…</div>
+
+      <div class="table-container">
+        <table class="nice" id="matchups-table" style="display:none">
+          <thead id="match-head"></thead>
+          <tbody id="match-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- DETAIL -->
+    <section id="view-detail" class="view-section" style="display:none">
+      <div class="section-header">
+        <h2>Detail</h2>
+        <button id="export-detail" class="action-button">Export CSV</button>
       </div>
 
-      <div id="players-list" class="pill-container"></div>
-      <div id="per-player"></div>
+      <div id="detail-note" class="message">Loading…</div>
 
-      <button id="btn-save-entry" class="action-button" disabled>Save Entry</button>
+      <div class="table-container scroll">
+        <table class="nice wide" id="detail-table">
+          <thead id="detail-head"></thead>
+          <tbody id="detail-body"></tbody>
+        </table>
+      </div>
+    </section>
 
-      <h3 style="margin-top:24px">Recent Entries</h3>
-      <div id="recent-entries"></div>
-    </div>
-  </section>
+    <!-- ADMIN -->
+    <section id="view-admin" class="view-section" style="display:none">
+      <div class="section-header">
+        <h2>Admin Panel</h2>
+      </div>
 
-</div>
+      <!-- Login -->
+      <div id="admin-login">
+        <input type="password" id="admin-pass" class="input-field" placeholder="Enter admin password" />
+        <button id="btn-login" class="action-button">Login</button>
+      </div>
 
-<!-- Main Script -->
-<script src="app.js"></script>
+      <!-- After login -->
+      <div id="admin-panel" style="display:none">
+        <h3>Add Player</h3>
+        <div class="form-row">
+          <input id="p-name" class="input-field" placeholder="Name" />
+          <input id="p-icon" class="input-field" placeholder="Icon (🎯 🏆 ⚽)" />
+          <button id="btn-add-player" class="action-button">Save</button>
+        </div>
 
+        <h3>Delete Player</h3>
+        <div class="form-row">
+          <select id="delete-player-select" class="input-field"></select>
+          <button id="btn-delete-player" class="action-button">Delete</button>
+        </div>
+
+        <h3>New Game Entry</h3>
+        <div class="form-row">
+          <input type="date" id="game-date" class="input-field" />
+          <input id="note" class="input-field" placeholder="Optional note" />
+        </div>
+
+        <div id="players-list" class="pill-container"></div>
+        <div id="per-player"></div>
+
+        <button id="btn-save-entry" class="action-button" disabled>Save Entry</button>
+
+        <h3 style="margin-top:24px">Recent Entries</h3>
+        <div id="recent-entries"></div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Main Script -->
+  <script src="app.js"></script>
 </body>
 </html>
