@@ -1,21 +1,23 @@
 
-const $ = s => document.querySelector(s);
-const $$ = s => Array.from(document.querySelectorAll(s));
-
+// ===== selectors & storage helpers =====
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => Array.from(document.querySelectorAll(s));
 const store = {
   get: (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
   set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
 };
 
-const fmtSign = n => n > 0 ? `+${n}` : `${n}`;
-const color = n => n > 0 ? "var(--pos)" : n < 0 ? "var(--neg)" : "var(--zero)";
+// ===== formatting helpers =====
+const fmtSign = (n) => n > 0 ? `+${n}` : `${n}`;
+const color = (n) => n > 0 ? "var(--pos)" : n < 0 ? "var(--neg)" : "var(--zero)";
+const rateColor = (r) => r > 0.5 ? "var(--pos)" : r < 0.5 ? "var(--neg)" : "var(--zero)";
 
+// ===== state =====
 const dashState = {
   rows: [],
   sortKey: store.get("dashSortKey", "Total"),
   sortDir: store.get("dashSortDir", "desc")
 };
-
 const detailState = {
   rows: [],
   games: [],
@@ -23,23 +25,45 @@ const detailState = {
   sortKey: store.get("detailSortKey", "Date"),
   sortDir: store.get("detailSortDir", "desc")
 };
+const matchupState = {
+  rows: [],
+  players: [],
+  sortKey: store.get("matchSortKey", "Player"),
+  sortDir: store.get("matchSortDir", "asc")
+};
 
+// ===== tabs =====
 function selectTab(tab) {
   store.set("lastTab", tab);
-  $("#tab-dashboard").classList.remove("on");
-  $("#tab-detail").classList.remove("on");
-  $("#tab-admin").classList.remove("on");
-  $("#view-dashboard").style.display = "none";
-  $("#view-detail").style.display = "none";
-  $("#view-admin").style.display = "none";
-  if (tab === "dashboard") { $("#tab-dashboard").classList.add("on"); $("#view-dashboard").style.display = ""; }
-  else if (tab === "detail") { $("#tab-detail").classList.add("on"); $("#view-detail").style.display = ""; }
-  else { $("#tab-admin").classList.add("on"); $("#view-admin").style.display = ""; }
+  $("#tab-dashboard")?.classList.remove("on");
+  $("#tab-detail")?.classList.remove("on");
+  $("#tab-admin")?.classList.remove("on");
+  $("#tab-matchups")?.classList.remove("on");
+
+  $("#view-dashboard")?.style && ($("#view-dashboard").style.display = "none");
+  $("#view-detail")?.style && ($("#view-detail").style.display = "none");
+  $("#view-admin")?.style && ($("#view-admin").style.display = "none");
+  $("#view-matchups")?.style && ($("#view-matchups").style.display = "none");
+
+  if (tab === "dashboard") {
+    $("#tab-dashboard")?.classList.add("on");
+    $("#view-dashboard").style.display = "";
+  } else if (tab === "detail") {
+    $("#tab-detail")?.classList.add("on");
+    $("#view-detail").style.display = "";
+  } else if (tab === "matchups") {
+    $("#tab-matchups")?.classList.add("on");
+    $("#view-matchups").style.display = "";
+  } else {
+    $("#tab-admin")?.classList.add("on");
+    $("#view-admin").style.display = "";
+  }
 }
 
+// ===== csv helpers =====
 function csvEscape(x) { const s = String(x ?? ""); return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; }
 function downloadCSV(filename, headers, rows) {
-  const head = headers.map(csvEscape).join(","); 
+  const head = headers.map(csvEscape).join(",");
   const body = rows.map(r => r.map(csvEscape).join(",")).join("\n");
   const blob = new Blob([head + "\n" + body], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -47,12 +71,15 @@ function downloadCSV(filename, headers, rows) {
   setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
 }
 
-function clearSortIndicators(headEl) { headEl.querySelectorAll("th").forEach(th => th.classList.remove("sort-asc","sort-desc","col-active")); }
+// ===== sort header helpers =====
+function clearSortIndicators(headEl) { headEl?.querySelectorAll("th").forEach(th => th.classList.remove("sort-asc","sort-desc","col-active")); }
 function applySortIndicator(headEl, key, dir) {
+  if (!headEl) return;
   const th = headEl.querySelector(`th[data-key="${CSS.escape(key)}"]`);
   if (th) { th.classList.add(dir === "asc" ? "sort-asc" : "sort-desc"); th.classList.add("col-active"); }
 }
 
+// ===== column hover helper =====
 function bindColumnHover(tableId) {
   const table = $(tableId); if (!table) return;
   const thead = table.querySelector("thead"); const tbody = table.querySelector("tbody");
@@ -63,13 +90,14 @@ function bindColumnHover(tableId) {
     lastIdx = idx;
     if (idx >= 0) table.querySelectorAll(`thead th:nth-child(${idx+1}), tbody td:nth-child(${idx+1})`).forEach(el => el.classList.add("col-hover"));
   }
-  thead.addEventListener("mousemove", e => { const th = e.target.closest("th"); if (!th) { setHover(-1); return; } const idx = Array.from(th.parentNode.children).indexOf(th); setHover(idx); });
-  thead.addEventListener("mouseleave", () => setHover(-1));
-  tbody.addEventListener("mouseleave", () => setHover(-1));
+  thead?.addEventListener("mousemove", e => { const th = e.target.closest("th"); if (!th) { setHover(-1); return; } const idx = Array.from(th.parentNode.children).indexOf(th); setHover(idx); });
+  thead?.addEventListener("mouseleave", () => setHover(-1));
+  tbody?.addEventListener("mouseleave", () => setHover(-1));
 }
 
+// ===== DASHBOARD =====
 function buildDashHeader() {
-  const head = $("#dash-head");
+  const head = $("#dash-head"); if (!head) return;
   head.innerHTML = `
     <tr>
       <th data-key="Player">Player</th>
@@ -89,7 +117,6 @@ function buildDashHeader() {
     });
   });
 }
-
 function renderDashboard() {
   if (!dashState.rows || !dashState.rows.length) { $("#dash-note").textContent = "No data yet."; $("#dash-table").style.display = "none"; return; }
   $("#dash-note").style.display = "none"; $("#dash-table").style.display = "";
@@ -114,14 +141,14 @@ function renderDashboard() {
   `).join("");
   clearSortIndicators(head); applySortIndicator(head, dashState.sortKey, dashState.sortDir);
 }
-
 async function loadDashboard() {
   try { const r = await fetch("/api/stats"); dashState.rows = await r.json(); buildDashHeader(); renderDashboard(); }
   catch { $("#dash-note").textContent = "Error loading dashboard."; $("#dash-table").style.display = "none"; }
 }
 
+// ===== DETAIL =====
 function buildDetailHeader() {
-  const head = $("#detail-head");
+  const head = $("#detail-head"); if (!head) return;
   head.innerHTML = `
     <tr>
       <th data-key="Date">Date</th>
@@ -139,17 +166,16 @@ function buildDetailHeader() {
     });
   });
 }
-
 function renderDetail() {
-  const note = $("#detail-note"); const tableWrap = $("#detail-table").parentElement;
-  if (!detailState.games.length) { note.textContent = "No entries yet."; tableWrap.style.display = "none"; return; }
-  note.style.display = "none"; tableWrap.style.display = "";
+  const note = $("#detail-note"); const tableWrap = $("#detail-table")?.parentElement;
+  if (!detailState.games.length) { note.textContent = "No entries yet."; if (tableWrap) tableWrap.style.display = "none"; return; }
+  note.style.display = "none"; if (tableWrap) tableWrap.style.display = "";
   const head = $("#detail-head"); const body = $("#detail-body");
   const data = detailState.games.slice();
   data.sort((a,b) => {
     const dir = detailState.sortDir === "asc" ? 1 : -1;
     if (detailState.sortKey === "Date") { const pa = new Date(a.Date.replace(/-/g," ")).getTime(); const pb = new Date(b.Date.replace(/-/g," ")).getTime(); return (pa - pb) * dir; }
-    if (detailState.sortKey === "Game") return ((a.Game|0) - (b.Game|0)) * dir;
+    if (detailState.sortKey === "Game") { const ga = Number(a.Game) || 0; const gb = Number(b.Game) || 0; return (ga - gb) * dir; }
     const va = Number(a[detailState.sortKey] ?? 0); const vb = Number(b[detailState.sortKey] ?? 0); return (va - vb) * dir;
   });
   body.innerHTML = data.map(g => `
@@ -157,14 +183,15 @@ function renderDetail() {
       <td>${g.Date}</td>
       <td>${g.Game}</td>
       ${detailState.players.map(p => {
-        const v = Number(g[p] ?? 0); const cls = v > 0 ? "points-pos" : v < 0 ? "points-neg" : "points-zero"; const sign = v > 0 ? `+${v}` : `${v}`;
+        const v = Number(g[p] ?? 0);
+        const cls = v > 0 ? "points-pos" : v < 0 ? "points-neg" : "points-zero";
+        const sign = v > 0 ? `+${v}` : `${v}`;
         return `<td><span class="${cls}">${sign}</span></td>`;
       }).join("")}
     </tr>
   `).join("");
-  const totals = detailState.players.map(p =>
-    data.reduce((sum, g) => sum + Number(g[p] ?? 0), 0)
-  );
+
+  const totals = detailState.players.map(p => data.reduce((sum, g) => sum + Number(g[p] ?? 0), 0));
   const totalRow = `
     <tr style="font-weight:700; background:var(--hover);">
       <td>TOTAL</td>
@@ -176,11 +203,9 @@ function renderDetail() {
       }).join("")}
     </tr>
   `;
-  
   body.innerHTML += totalRow;
   clearSortIndicators(head); applySortIndicator(head, detailState.sortKey, detailState.sortDir);
 }
-
 async function loadDetail() {
   try {
     const r = await fetch("/api/entries"); const rows = await r.json(); detailState.rows = rows;
@@ -190,14 +215,161 @@ async function loadDetail() {
       const d = new Date(it.entry_ts + "Z");
       const dateFmt = d.toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"2-digit", timeZone:"UTC" }).replace(/ /g,"-");
       if (!gamesMap.has(it.entry_id)) gamesMap.set(it.entry_id, { Date: dateFmt, Game: it.entry_id });
-      gamesMap.get(it.entry_id)[it.name] = Number(it.points||0);
+      gamesMap.get(it.entry_id)[it.name] = Number(it.points ?? 0);
     });
     detailState.players = Array.from(new Set(rows.map(x => x.name))).sort((a,b)=>a.localeCompare(b, undefined, {sensitivity:"base"}));
     detailState.games = Array.from(gamesMap.values());
     buildDetailHeader(); renderDetail();
-  } catch { $("#detail-note").textContent = "Error loading detail."; $("#detail-table").parentElement.style.display = "none"; }
+  } catch { $("#detail-note").textContent = "Error loading detail."; $("#detail-table")?.parentElement && ($("#detail-table").parentElement.style.display = "none"); }
 }
 
+// ===== MATCHUPS (Best/Worst vs) =====
+function buildMatchupHeader() {
+  const head = $("#match-head"); if (!head) return;
+  head.innerHTML = `
+    <tr>
+      <th data-key="Player">Player</th>
+      <th data-key="BestRate">Best vs (win%)</th>
+      <th data-key="WorstRate">Worst vs (win%)</th>
+    </tr>
+  `;
+  head.querySelectorAll("th").forEach(th => {
+    th.addEventListener("click", () => {
+      const key = th.dataset.key;
+      if (matchupState.sortKey === key) matchupState.sortDir = matchupState.sortDir === "asc" ? "desc" : "asc";
+      else { matchupState.sortKey = key; matchupState.sortDir = key === "Player" ? "asc" : "desc"; }
+      store.set("matchSortKey", matchupState.sortKey);
+      store.set("matchSortDir", matchupState.sortDir);
+      renderMatchups();
+    });
+  });
+}
+function renderMatchups() {
+  const note = $("#match-note");
+  const table = $("#matchups-table");
+  const headEl = $("#match-head");
+  const body = $("#match-body");
+
+  if (!matchupState.rows.length) {
+    if (note) note.textContent = "No data yet.";
+    if (table) table.style.display = "none";
+    return;
+  }
+  if (note) note.style.display = "none";
+  if (table) table.style.display = "";
+
+  const rows = matchupState.rows.slice();
+  const dir = matchupState.sortDir === "asc" ? 1 : -1;
+
+  rows.sort((a, b) => {
+    if (matchupState.sortKey === "Player") return a.name.localeCompare(b.name, undefined, {sensitivity:"base"}) * dir;
+    if (matchupState.sortKey === "BestRate") return ((a.bestRate ?? -1) - (b.bestRate ?? -1)) * dir;
+    if (matchupState.sortKey === "WorstRate") return ((a.worstRate ?? 2) - (b.worstRate ?? 2)) * dir;
+    return 0;
+  });
+
+  function listWithPctAndN(items) {
+    if (!items?.length) return "—";
+    return items.map(it => {
+      const pct = (it.rate * 100).toFixed(1) + "%";
+      const games = it.n;
+      const clr = rateColor(it.rate);
+      return `<span style="color:${clr}; font-weight:600;">${it.name} (${pct}, ${games} ${games === 1 ? "game" : "games"})</span>`;
+    }).join(", ");
+  }
+
+  body.innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.name}</td>
+      <td>${listWithPctAndN(r.bestList)}</td>
+      <td>${listWithPctAndN(r.worstList)}</td>
+    </tr>
+  `).join("");
+
+  clearSortIndicators(headEl);
+  applySortIndicator(headEl, matchupState.sortKey, matchupState.sortDir);
+}
+async function loadMatchups() {
+  try {
+    const r = await fetch("/api/entries");
+    const rows = await r.json();
+
+    matchupState.rows = [];
+    matchupState.players = [];
+
+    if (!rows.length) { buildMatchupHeader(); renderMatchups(); return; }
+
+    // Build games: entry_id -> Map(name -> points)
+    const games = new Map();
+    rows.forEach(it => {
+      if (!games.has(it.entry_id)) games.set(it.entry_id, new Map());
+      games.get(it.entry_id).set(it.name, Number(it.points ?? 0));
+    });
+
+    const players = Array.from(new Set(rows.map(x => x.name)))
+      .sort((a,b)=>a.localeCompare(b, undefined, {sensitivity:"base"}));
+    matchupState.players = players;
+
+    // stats[A][B] = { w, l } for ordered pair A vs B
+    const stats = new Map();
+    players.forEach(a => {
+      const inner = new Map();
+      players.forEach(b => { if (a !== b) inner.set(b, { w:0, l:0 }); });
+      stats.set(a, inner);
+    });
+
+    // Accumulate: for each game, for each player A with non-tie points, count win/loss vs every co-player B
+    for (const [, ptsMap] of games) {
+      const names = Array.from(ptsMap.keys());
+      for (const A of names) {
+        const aPts = ptsMap.get(A) ?? 0;
+        if (aPts === 0) continue; // tie for A - exclude from A's denominator for all vs-B in this game
+        for (const B of names) {
+          if (A === B) continue;
+          const ab = stats.get(A)?.get(B);
+          if (!ab) continue;
+          if (aPts > 0) ab.w += 1;
+          else ab.l += 1;
+        }
+      }
+    }
+
+    // Build rows: per A, compute best & worst (may include multiple Bs on ties)
+    const rowsOut = [];
+    for (const A of players) {
+      const pairs = [];
+      for (const B of players) {
+        if (A === B) continue;
+        const ab = stats.get(A)?.get(B) ?? { w:0, l:0 };
+        const n = ab.w + ab.l; // denominator excludes A-ties by construction
+        if (n === 0) continue;
+        const rate = ab.w / n;
+        pairs.push({ name: B, rate, n });
+      }
+
+      if (!pairs.length) {
+        rowsOut.push({ name: A, bestRate: null, worstRate: null, bestList: [], worstList: [] });
+        continue;
+      }
+
+      const bestRate = Math.max(...pairs.map(p => p.rate));
+      const worstRate = Math.min(...pairs.map(p => p.rate));
+      const bestList = pairs.filter(p => p.rate === bestRate).map(p => ({ name: p.name, rate: p.rate, n: p.n }));
+      const worstList = pairs.filter(p => p.rate === worstRate).map(p => ({ name: p.name, rate: p.rate, n: p.n }));
+
+      rowsOut.push({ name: A, bestRate, worstRate, bestList, worstList });
+    }
+
+    matchupState.rows = rowsOut;
+    buildMatchupHeader();
+    renderMatchups();
+  } catch {
+    $("#match-note")?.textContent = "Error loading matchups.";
+    $("#matchups-table") && ($("#matchups-table").style.display = "none");
+  }
+}
+
+// ===== EXPORTS =====
 function exportDashboardCSV() {
   if (!dashState.rows.length) return;
   const headers = ["Player","Total","Wins","Games","Win %"];
@@ -210,23 +382,23 @@ function exportDashboardCSV() {
     if (dashState.sortKey === "WinPct") return (a.win_pct-b.win_pct)*dir;
     return 0;
   });
-  const rows = sorted.map(r => [ `${r.icon} ${r.name}`, fmtSign(r.total_points), r.wins, r.games_played, (r.win_pct*100).toFixed(1)+"%" ]);
+  const rows = sorted.map(r => [`${r.icon} ${r.name}`, fmtSign(r.total_points), r.wins, r.games_played, (r.win_pct*100).toFixed(1)+"%"]);
   downloadCSV("dashboard.csv", headers, rows);
 }
-
 function exportDetailCSV() {
   if (!detailState.games.length) return;
   const headers = ["Date","Game", ...detailState.players];
   const sorted = detailState.games.slice().sort((a,b) => {
     const dir = detailState.sortDir === "asc" ? 1 : -1;
     if (detailState.sortKey === "Date") { const pa = new Date(a.Date.replace(/-/g," ")).getTime(); const pb = new Date(b.Date.replace(/-/g," ")).getTime(); return (pa - pb) * dir; }
-    if (detailState.sortKey === "Game") return ((a.Game|0)-(b.Game|0))*dir;
+    if (detailState.sortKey === "Game") { const ga = Number(a.Game)||0; const gb = Number(b.Game)||0; return (ga - gb) * dir; }
     const va = Number(a[detailState.sortKey] ?? 0); const vb = Number(b[detailState.sortKey] ?? 0); return (va - vb) * dir;
   });
   const rows = sorted.map(g => [ g.Date, g.Game, ...detailState.players.map(p => Number(g[p] ?? 0)) ]);
   downloadCSV("detail.csv", headers, rows);
 }
 
+// ===== ADMIN =====
 async function adminLogin() {
   const password = $("#admin-pass").value;
   const r = await fetch("/api/auth/login", { method:"POST", headers:{ "content-type":"application/json" }, body: JSON.stringify({ password }) });
@@ -234,7 +406,6 @@ async function adminLogin() {
   if (data && data.ok) { $("#admin-login").style.display = "none"; $("#admin-panel").style.display = ""; await adminLoadPlayers(); await adminLoadRecent(); }
   else { alert("Incorrect password"); }
 }
-
 async function adminLoadPlayers() {
   const r = await fetch("/api/players"); const players = await r.json();
   const list = $("#players-list"); list.innerHTML = "";
@@ -244,7 +415,6 @@ async function adminLoadPlayers() {
     lab.addEventListener("click", () => { lab.classList.toggle("on"); adminRenderPerPlayer(players); });
     list.appendChild(lab);
   });
-
   const delSel = $("#delete-player-select");
   if (delSel) {
     delSel.innerHTML = "";
@@ -256,12 +426,11 @@ async function adminLoadPlayers() {
       const pid = Number($("#delete-player-select").value); if (!pid) return;
       if (!confirm("Delete this player? This will remove their historical scores.")) return;
       const resp = await fetch(`/api/players/${pid}`, { method: "DELETE" });
-      const data = await resp.json().catch(() => ({}));
-      if (!resp.ok || !data.ok) { alert(data?.error || "Failed to delete player."); return; }
+      const data = await resp.json().catch(()=>({}));
+      if (!resp.ok || !data.ok) { alert(data?.error ?? "Failed to delete player."); return; }
       await adminLoadPlayers(); await loadDashboard(); if ($("#view-detail").style.display !== "none") await loadDetail();
     };
   }
-
   $("#btn-add-player").onclick = async () => {
     const name = $("#p-name").value.trim(); const icon = $("#p-icon").value.trim() || null;
     if (!name) { alert("Enter a name"); return; }
@@ -269,7 +438,6 @@ async function adminLoadPlayers() {
     $("#p-name").value = ""; $("#p-icon").value = "";
     await adminLoadPlayers(); await loadDashboard(); if ($("#view-detail").style.display !== "none") await loadDetail();
   };
-
   function selectedIds() { return $$("#players-list .pill.on").map(x => Number(x.dataset.id)); }
   function adminRenderPerPlayer(playersArr) {
     const ids = selectedIds(); const box = $("#per-player"); box.innerHTML = ""; $("#btn-save-entry").disabled = ids.length === 0;
@@ -281,10 +449,9 @@ async function adminLoadPlayers() {
       box.appendChild(row);
     });
   }
-
   $("#btn-save-entry").onclick = async () => {
     const inputs = $$("#per-player input[data-id]");
-    const items = inputs.map(inp => ({ player_id: Number(inp.dataset.id), points: Number(inp.value||0) }));
+    const items = inputs.map(inp => ({ player_id: Number(inp.dataset.id), points: Number(inp.value ?? 0) }));
     if (!items.length) return;
     const note = $("#note").value; const game_date = $("#game-date").value || undefined;
     const resp = await fetch("/api/entries", { method:"POST", headers:{ "content-type":"application/json" }, body: JSON.stringify({ items, note, game_date }) });
@@ -294,7 +461,6 @@ async function adminLoadPlayers() {
     await loadDashboard(); if ($("#view-detail").style.display !== "none") await loadDetail(); await adminLoadRecent();
   };
 }
-
 async function adminLoadRecent() {
   try {
     const r = await fetch("/api/entries?limit=10"); const rows = await r.json();
@@ -302,7 +468,9 @@ async function adminLoadRecent() {
     if (!rows.length) { container.innerHTML = `<div class="message">No entries yet.</div>`; return; }
     const ids = Array.from(new Set(rows.map(x => x.entry_id)));
     ids.forEach(eid => {
-      const group = rows.filter(x => x.entry_id === eid); const ts = group[0].entry_ts.replace("T"," ") + " UTC"; const note = group[0].note || "";
+      const group = rows.filter(x => x.entry_id === eid);
+      const ts = group[0].entry_ts.replace("T"," ") + " UTC";
+      const note = group[0].note ?? "";
       const mini = group.map(r => `${r.icon} ${r.name}: ${r.points > 0 ? "+"+r.points : r.points}`).join(" • ");
       const row = document.createElement("div"); row.className = "form-row";
       const left = document.createElement("div"); left.style.flex = "1"; left.innerHTML = `<b>Game #${eid}</b> — ${ts} — <i>${note}</i><br>${mini}`;
@@ -320,27 +488,29 @@ async function adminLoadRecent() {
   } catch { $("#recent-entries").innerHTML = `<div class="message">Error loading recent entries.</div>`; }
 }
 
+// ===== WIRING =====
 function wireTabs() {
-  $("#tab-dashboard").addEventListener("click", () => { selectTab("dashboard"); });
-  $("#tab-detail").addEventListener("click", () => { selectTab("detail"); loadDetail(); });
-  $("#tab-admin").addEventListener("click", () => { selectTab("admin"); });
+  $("#tab-dashboard")?.addEventListener("click", () => { selectTab("dashboard"); });
+  $("#tab-detail")?.addEventListener("click", () => { selectTab("detail"); loadDetail(); });
+  $("#tab-matchups")?.addEventListener("click", () => { selectTab("matchups"); loadMatchups(); });
+  $("#tab-admin")?.addEventListener("click", () => { selectTab("admin"); });
 }
-
-function wireExports() { $("#export-dashboard").addEventListener("click", exportDashboardCSV); $("#export-detail").addEventListener("click", exportDetailCSV); }
-function wireAdmin() { $("#btn-login").addEventListener("click", adminLogin); }
-
-function initHeads() { buildDashHeader(); buildDetailHeader(); }
+function wireExports() {
+  $("#export-dashboard")?.addEventListener("click", exportDashboardCSV);
+  $("#export-detail")?.addEventListener("click", exportDetailCSV);
+}
+function wireAdmin() { $("#btn-login")?.addEventListener("click", adminLogin); }
+function initHeads() { buildDashHeader(); buildDetailHeader(); buildMatchupHeader(); }
 function applySavedTab() {
   const last = store.get("lastTab", "dashboard");
   if (last === "detail") { selectTab("detail"); loadDetail(); }
+  else if (last === "matchups") { selectTab("matchups"); loadMatchups(); }
   else if (last === "admin") { selectTab("admin"); }
   else { selectTab("dashboard"); }
 }
-
 function init() {
   wireTabs(); wireExports(); wireAdmin(); initHeads();
-  bindColumnHover("#dash-table"); bindColumnHover("#detail-table");
+  bindColumnHover("#dash-table"); bindColumnHover("#detail-table"); bindColumnHover("#matchups-table");
   loadDashboard(); applySavedTab();
 }
-
 document.addEventListener("DOMContentLoaded", init);
