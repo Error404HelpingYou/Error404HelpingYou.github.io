@@ -357,7 +357,7 @@ async function adminLoadPlayers() {
     });
   }
   $("#btn-save-entry").onclick = async () => {
-    const inputs = $$("#per-player input[type=number]");
+    const inputs = $$("#per-player input[data-id]");
     const items = inputs.map(inp => ({ player_id: Number(inp.dataset.id), points: Number(inp.value||0) }));
     if (!items.length) return;
     const note = $("#note").value;
