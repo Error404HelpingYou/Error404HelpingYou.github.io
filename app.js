@@ -340,31 +340,32 @@ async function adminLoadPlayers() {
       opt.textContent = `${p.icon} ${p.name}`;
       delSel.appendChild(opt);
     });
+    // === Delete Player click handler ===
+    const delBtn = $("#btn-delete-player");
+    if (delBtn) {
+      delBtn.onclick = async () => {
+        const pid = Number($("#delete-player-select").value);
+        if (!pid) return;
+    
+        if (!confirm("Delete this player? This will remove their historical scores.")) return;
+    
+        const resp = await fetch(`/api/players/${pid}`, { method: "DELETE" });
+        const data = await resp.json().catch(() => ({}));
+    
+        if (!resp.ok || !data.ok) {
+          alert(data?.error || "Failed to delete player.");
+          return;
+        }
+    
+        // Refresh Admin lists and both tables
+        await adminLoadPlayers();
+        await loadDashboard();
+        if ($("#view-detail").style.display !== "none") await loadDetail();
+      };
+    }
   }
   
-  // === Delete Player click handler ===
-  const delBtn = $("#btn-delete-player");
-  if (delBtn) {
-    delBtn.onclick = async () => {
-      const pid = Number($("#delete-player-select").value);
-      if (!pid) return;
-  
-      if (!confirm("Delete this player? This will remove their historical scores.")) return;
-  
-      const resp = await fetch(`/api/players/${pid}`, { method: "DELETE" });
-      const data = await resp.json().catch(() => ({}));
-  
-      if (!resp.ok || !data.ok) {
-        alert(data?.error || "Failed to delete player.");
-        return;
-      }
-  
-      // Refresh Admin lists and both tables
-      await adminLoadPlayers();
-      await loadDashboard();
-      if ($("#view-detail").style.display !== "none") await loadDetail();
-    };
-  }
+
 
   $("#btn-add-player").onclick = async () => {
     const name = $("#p-name").value.trim();
